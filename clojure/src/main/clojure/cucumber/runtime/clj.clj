@@ -22,12 +22,12 @@
     Snippet
     (template [_]
       (str
-       "({0} #\"{1}\" [{3}]\n"
-       "  (comment  {4}  )\n"
-       "  (throw (cucumber.api.PendingException.)))\n"))
+        "({0} #\"{1}\" [{3}]\n"
+        "  (comment  {4}  )\n"
+        "  (throw (cucumber.api.PendingException.)))\n"))
     (arguments [_ argumentTypes]
       (str/replace (SnippetGenerator/untypedArguments argumentTypes)
-                   "," ""))
+        "," ""))
     (namedGroupStart [_] nil)
     (namedGroupEnd [_] nil)
     (tableHint [_] nil)
@@ -38,19 +38,27 @@
 
 (defn load-script [path]
   (try
-    (RT/load (str (.replaceAll path ".clj$" "")) true)
+    (let [filename (str (.replaceAll path ".clj$" ""))]
+      (RT/load filename true))
     (catch Throwable t
       (throw (CucumberException. t)))))
 
 (defn- -init [resource-loader]
   [[] (atom {:resource-loader resource-loader})])
 
+
+(defn- find-clojure-files-recursively [cljb glue-path]
+  (let [resource-loader (:resource-loader @(.state cljb))]
+    (.resources resource-loader glue-path ".clj")))
+
+(defn- relative-path-in-glue [clojure-file glue-path]
+  (.replaceAll (.getPath clojure-file) (str glue-path "/") ""))
+
 (defn -loadGlue [cljb a-glue glue-paths]
   (reset! glue a-glue)
-  (doseq [path glue-paths
-          resource (.resources (:resource-loader @(.state cljb)) path ".clj")]
-    (binding [*ns* (create-ns 'cucumber.runtime.clj)]
-      (load-script (.getPath resource)))))
+  (doseq [glue-path    glue-paths
+          clojure-file (find-clojure-files-recursively cljb glue-path)]
+    (load-script (relative-path-in-glue clojure-file glue-path))))
 
 (defn- -buildWorld [cljb])
 
@@ -67,76 +75,76 @@
 
 (defn add-step-definition [pattern fun location]
   (.addStepDefinition
-   @glue
-   (reify
-     StepDefinition
-     (matchedArguments [_ step]
-       (.argumentsFrom (JdkPatternArgumentMatcher. pattern)
-                       (.getText step)))
-     (getLocation [_ detail]
-       (location-str location))
-     (getParameterCount [_]
-       nil)
-     (getParameterType [_ n argumentType]
-       nil)
-     (execute [_ locale args]
-       (apply fun args))
-     (isDefinedAt [_ stack-trace-element]
-       (and (= (.getLineNumber stack-trace-element)
+    @glue
+    (reify
+      StepDefinition
+      (matchedArguments [_ step]
+        (.argumentsFrom (JdkPatternArgumentMatcher. pattern)
+          (.getText step)))
+      (getLocation [_ detail]
+        (location-str location))
+      (getParameterCount [_]
+        nil)
+      (getParameterType [_ n argumentType]
+        nil)
+      (execute [_ locale args]
+        (apply fun args))
+      (isDefinedAt [_ stack-trace-element]
+        (and (= (.getLineNumber stack-trace-element)
                (:line location))
-            (= (.getFileName stack-trace-element)
-               (:file location))))
-     (getPattern [_]
-       (str pattern)))))
+          (= (.getFileName stack-trace-element)
+            (:file location))))
+      (getPattern [_]
+        (str pattern)))))
 
 (defmulti add-hook-definition (fn [t & _] t))
 
 (defmethod add-hook-definition :before [_ tag-expression hook-fun location]
   (let [tp (TagPredicate. tag-expression)]
     (.addBeforeHook
-     @glue
-     (reify
-       HookDefinition
-       (getLocation [_ detail?]
-         (location-str location))
-       (execute [hd scenario-result]
-         (hook-fun))
-       (matches [hd tags]
-         (.apply tp tags))
-       (getOrder [hd] 0)
-       (isScenarioScoped [hd] false)))))
+      @glue
+      (reify
+        HookDefinition
+        (getLocation [_ detail?]
+          (location-str location))
+        (execute [hd scenario-result]
+          (hook-fun))
+        (matches [hd tags]
+          (.apply tp tags))
+        (getOrder [hd] 0)
+        (isScenarioScoped [hd] false)))))
 
 (defmethod add-hook-definition :after [_ tag-expression hook-fun location]
-  (let [tp (TagPredicate. tag-expression)
+  (let [tp                  (TagPredicate. tag-expression)
         max-parameter-count (->> hook-fun class .getDeclaredMethods
-                                 (filter #(= "invoke" (.getName %)))
-                                 (map #(count (.getParameterTypes %)))
-                                 (apply max))]
+                              (filter #(= "invoke" (.getName %)))
+                              (map #(count (.getParameterTypes %)))
+                              (apply max))]
     (.addAfterHook
-     @glue
-     (reify
-       HookDefinition
-       (getLocation [_ detail?]
-         (location-str location))
-       (execute [hd scenario-result]
-         (if (zero? max-parameter-count)
-           (hook-fun)
-           (hook-fun scenario-result)))
-       (matches [hd tags]
-         (.apply tp tags))
-       (getOrder [hd] 0)
-       (isScenarioScoped [hd] false)))))
+      @glue
+      (reify
+        HookDefinition
+        (getLocation [_ detail?]
+          (location-str location))
+        (execute [hd scenario-result]
+          (if (zero? max-parameter-count)
+            (hook-fun)
+            (hook-fun scenario-result)))
+        (matches [hd tags]
+          (.apply tp tags))
+        (getOrder [hd] 0)
+        (isScenarioScoped [hd] false)))))
 
 (defmacro step-macros [& names]
   (cons 'do
-        (for [name names]
-          `(defmacro ~name [pattern# binding-form# & body#]
-             `(add-step-definition ~pattern#
-                                   (fn ~binding-form# ~@body#)
-                                   '~{:file *file*
-                                      :line (:line (meta ~'&form))})))))
+    (for [name names]
+      `(defmacro ~name [pattern# binding-form# & body#]
+         `(add-step-definition ~pattern#
+            (fn ~binding-form# ~@body#)
+            '~{:file *file*
+               :line (:line (meta ~'&form))})))))
 (step-macros
- Given When Then And But)
+  Given When Then And But)
 
 (defn- hook-location [file form]
   {:file file
@@ -174,8 +182,8 @@
      {:from 1293884100000, :to 1293884100000}"
   [data]
   (->> (into {} (map vec (.raw data)))
-       (update-values read-cuke-str)
-       (update-keys keyword)))
+    (update-values read-cuke-str)
+    (update-keys keyword)))
 
 (defn table->rows
   "Reads a cucumber table of the form
@@ -189,11 +197,11 @@
      [{:id 55, :name \"foo\", :created-at 1293884100000}
       {:id 56, :name \"bar\", :created-at 1293884100000}]"
   [data]
-  (let [data (map seq (.raw data))
-        header-keys (map keyword (first data))
-        remove-blank (fn [m,k,v] (if (seq (str v)) (assoc m k v) m))
-        row->hash (fn [row] (apply hash-map
-                                   (interleave header-keys
-                                               (map read-cuke-str row))))]
+  (let [data         (map seq (.raw data))
+        header-keys  (map keyword (first data))
+        remove-blank (fn [m, k, v] (if (seq (str v)) (assoc m k v) m))
+        row->hash    (fn [row] (apply hash-map
+                                 (interleave header-keys
+                                   (map read-cuke-str row))))]
     (map (fn [row-vals] (reduce-kv remove-blank {} (row->hash row-vals)))
-         (next data))))
+      (next data))))
