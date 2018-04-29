@@ -86,7 +86,7 @@
 
     <modules>
         <module>clojure</module>
-        <module>examples</module>
+        <module>example</module>
     </modules>
 
     <profiles>
