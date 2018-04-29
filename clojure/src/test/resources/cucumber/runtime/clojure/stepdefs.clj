@@ -1,4 +1,5 @@
 (use 'cucumber.runtime.clojure.belly)
+(require '[cucumber.runtime.clj :refer :all])
 
 (def some-state (atom "'Before' hasn't run."))
 
