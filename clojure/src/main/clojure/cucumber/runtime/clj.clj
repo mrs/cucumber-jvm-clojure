@@ -1,5 +1,5 @@
 (ns cucumber.runtime.clj
-  (:require (clojure [string :as str]))
+  (:require [clojure.string :as str])
   (:import (cucumber.runtime CucumberException
                              JdkPatternArgumentMatcher
                              StepDefinition
