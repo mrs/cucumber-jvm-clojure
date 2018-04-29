@@ -1,5 +1,7 @@
 (use 'clojure-cukes.core)
 (use 'clojure.test)
+(use 'cucumber.runtime.clj)
+
 
 (Given #"^I have (\d+) big \"([^\"]*)\" in my belly$" [n, thing]
        (reset! belly (repeat (read-string n) thing)))
