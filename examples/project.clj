@@ -6,6 +6,6 @@
                "test/features"]
 
   :profiles {:dev {:monkeypatch-clojure-test false
-                    :dependencies [[io.cucumber/cucumber-clojure "2.0.2"]]}}
+                   :dependencies [[io.cucumber/cucumber-clojure "2.0.2-SNAPSHOT"]]}}
 
   )
