@@ -24,7 +24,7 @@
         <outputDirectory>${project.build.directory}</outputDirectory>
 
         <!-- Remember to bounce version in examples/project.clj as well -->
-        <clojure.version>1.8.0</clojure.version>
+        <clojure.version>1.9.0</clojure.version>
         <cucumber.version>2.4.0</cucumber.version>
         <junit.version>4.12</junit.version>
 
