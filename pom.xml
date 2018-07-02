@@ -20,7 +20,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <minimum.maven.version>3.3</minimum.maven.version>
+        <minimum.maven.version>3.2.5</minimum.maven.version>
         <outputDirectory>${project.build.directory}</outputDirectory>
 
         <!-- Remember to bounce version in examples/project.clj as well -->
