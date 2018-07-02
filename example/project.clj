@@ -1,6 +1,6 @@
 (defproject cucumber-clojure-example "2.4.0-SNAPSHOT"
   :description "A demo of Cucumber with Clojure and Leiningen"
-  :dependencies [[org.clojure/clojure "1.8.0"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]]
 
   :test-paths ["test/acceptance"
                "test/features"]
